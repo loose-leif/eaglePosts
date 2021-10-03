@@ -11,7 +11,8 @@
  const byte POL = 7;
  const byte pause = 2;
  const byte HOLDHIGH = 13;
-
+ const int runCount = 8;
+ const int width = 8;
  
 
  //const int pad_count = 64;
@@ -22,10 +23,12 @@ const int HV_size = 64;
 int i;
 
 int runNum;
+
+
                     
 // EXAMPLE FULL HOLD int output[8] = {96,24,0,0,0,0,8,137};
 
-int outputArray[8][8] = {{96,0,0,0,0,0,0,0},
+int outputArray[runCount][width] = {{96,0,0,0,0,0,0,0},
                          {0,24,0,0,0,0,0,0},
                          {0,0,0,0,0,0,8,0},
                          {0,0,0,0,0,0,0,137},
@@ -91,17 +94,20 @@ void setup (){
 
 void loop (){
 
-    for(runNum=0; runNum<8; runNum++){
+    for(runNum=0; runNum<runCount; runNum++){
     
-    for(i = 0; i<8; i++){
+    for(i = 0; i<width; i++){
       
       shiftOut(DATA, CLK, MSBFIRST, outputArray[runNum][i]);
 
     }
+
+    delay(1000);
     
     while(digitalRead(pause));
-    delay(1000);
+    
     Serial.print(runNum);
+    
     }
 
     
