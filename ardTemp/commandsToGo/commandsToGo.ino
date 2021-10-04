@@ -11,7 +11,7 @@
  const byte POL = 7;
  const byte pause = 2;
  const byte HOLDHIGH = 13;
- const int runCount = 8;
+ const int runCount = 4;
  const int width = 8;
  
 
@@ -24,20 +24,16 @@ int i;
 
 int runNum;
 
-
+int out[] = {1,1,1,1,1,1,1,1};
                     
 // EXAMPLE FULL HOLD int output[8] = {96,24,0,0,0,0,8,137};
 
 int outputArray[runCount][width] = 
                         
-                        {{64,0,0,0,0,0,0,0}, //1
-                         {192,0,0,0,0,0,0,0},
-                         {192,0,0,0,0,0,0,2}, 
-                         {64,0,0,0,0,0,0,2},
-                         {64,0,0,0,0,0,1,2},
-                         {64,0,0,0,0,0,1,0},
-                         {64,0,0,0,0,0,17,0},
-                         {64,0,0,0,0,0,16,0}}; //8
+                        {{0,0,0,0,0,0,0,0}, //1
+                         {0,0,0,0,0,0,0,0},
+                         {0,0,0,0,0,0,0,128}, 
+                         {0,0,0,0,0,0,0,0}}; //8
 
 
                 
@@ -133,6 +129,8 @@ void setup (){
   
   Serial.begin(9600);
 
+  while(digitalRead(pause));
+
 }
 
 void loop (){
@@ -141,20 +139,37 @@ void loop (){
 
     Serial.print("Sending run: ");
     Serial.println(runNum+1);
-
+    Serial.println(outputArray[runNum][7]);
+  
     delay(1500);
-    
+
+    digitalWrite(LAT,1);
+
     for(i = 0; i<width; i++){
       
-      shiftOut(DATA, CLK, MSBFIRST, outputArray[runNum][i]);
+      //shiftOut(DATA, CLK, LSBFIRST, outputArray[runNum][i]);
+      shiftOut(DATA, CLK, LSBFIRST, outputArray[runNum][i]);
 
     }
 
-    
+    digitalWrite(LAT,0);
     
     while(digitalRead(pause));
-    
-    
+
+//    delay(1500);
+//
+//    digitalWrite(LAT,1);
+//
+//    for(i = 0; i<width; i++){
+//      
+//      //shiftOut(DATA, CLK, LSBFIRST, outputArray[runNum][i]);
+//      shiftOut(DATA, CLK, LSBFIRST, 0);
+//
+//    }
+//
+//    while(digitalRead(pause));
+//
+//    digitalWrite(LAT,0);
     
     }
 
