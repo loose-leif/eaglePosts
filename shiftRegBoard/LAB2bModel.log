@@ -1,0 +1,21 @@
+Circuit: * C:\Users\chase\OneDrive\Documents\GitHub\eaglePosts\shiftRegBoard\LAB2bModel.asc
+
+Direct Newton iteration for .op point succeeded.
+
+Date: Fri Oct 22 09:52:25 2021
+Total elapsed time: 4.176 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 289213
+traniter = 289197
+tranpoints = 111218
+accept = 75289
+rejected = 35929
+matrix size = 78
+fillins = 83
+solver = Normal
+Matrix Compiler1: 7.90 KB object code size  5.3/2.7/[1.2]
+Matrix Compiler2: 7.94 KB object code size  2.2/3.0/[1.2]
+
