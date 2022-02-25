@@ -1,0 +1,21 @@
+Circuit: * C:\Users\Chase\Documents\GitHub\eaglePosts\shiftRegBoard\Draft1.asc
+
+Direct Newton iteration for .op point succeeded.
+
+Date: Thu Oct 21 20:19:11 2021
+Total elapsed time: 1.745 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 334013
+traniter = 333997
+tranpoints = 124215
+accept = 84259
+rejected = 39956
+matrix size = 78
+fillins = 83
+solver = Normal
+Matrix Compiler1: 7.90 KB object code size  1.5/0.5/[0.4]
+Matrix Compiler2: 7.94 KB object code size  0.5/0.5/[0.3]
+
