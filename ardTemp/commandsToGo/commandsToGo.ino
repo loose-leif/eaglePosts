@@ -1,177 +1,142 @@
+/**
+ * This sketch is specifically for programming the EEPROM used in the 8-bit
+ * decimal display decoder described in https://youtu.be/dLh1n2dErzE
+ */
+#define SHIFT_DATA 2
+#define SHIFT_CLK 3
+#define SHIFT_LATCH 4
+#define EEPROM_D0 5
+#define EEPROM_D7 12
+#define WRITE_EN 13
 
-// ff
+/*
+   Output the address bits and outputEnable signal using shift registers.
+*/
+void setAddress(int address, bool outputEnable) {
+  shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, (address >> 8) | (outputEnable ? 0x00 : 0x80));
+  shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, address);
 
-// 10 Point Data Loader for HV507
-
- const byte CLK = 4;
- const byte LAT= 10;
- const byte DATA= 9;
- const byte DIR = 12;
- const byte BLANK = 8;
- const byte POL = 7;
- const byte pause = 2;
- const byte HOLDHIGH = 13;
- const int runCount = 8;
- const int width = 8;
- 
-
- //const int pad_count = 64;
- //const int packet_count = 2;
-
-const int HV_size = 64;
-
-int i;
-
-int k;
-
-int runNum;
-
-int out[] = {1,1,1,1,1,1,1,1};
-                    
-// EXAMPLE FULL HOLD int output[8] = {96,24,0,0,0,0,8,137};
-
-int outputArray[runCount][width] = 
-                        
-                        {  {64,0,0,0,0,0,0,0},
-                           {192,0,0,0,0,0,0,0},
-                           {192,0,0,0,0,0,0,2},
-                           {64,0,0,0,0,0,0,2},
-                           {64,0,0,0,0,0,1,2},
-                           {64,0,0,0,0,0,1,0},
-                           {64,0,0,0,0,0,17,0},
-                           {64,0,0,0,0,0,16,0} };
-                        
-
-
-                
-// ----TEMPLATE--------> 1 { 1,1,0,0,0,0,0,0, 8
-//                       9   0,0,1,1,0,0,0,0, 16
-//                      17   0,0,0,0,0,0,0,0, 24
-//                      28   0,0,0,0,0,0,0,0, 32
-//                      33   0,0,0,0,0,0,0,0, 40
-//                      41   0,0,0,0,0,0,0,0, 48
-//                      49   0,0,0,1,0,0,0,1, 56
-//                      57   0,0,0,1,0,0,1,0  64 };
-
-
-//1 0,1,0,0,0,0,0,0 [2 IS PERM ON] int 64
-
-//2 1,1,0,0,0,0,0,0 2->1 int 192
-
-//3 1,1,0,0,0,0,0,0 int 192
-//  0,0,0,0,0,0,1,0 1&2->63 int 2
-
-//4 0,1,0,0,0,0,0,0 [2 IS PERM ON] int 64
-//  0,0,0,0,0,0,1,0 63 int 2
-
-//5 0,1,0,0,0,0,0,0 [2 IS PERM ON] int 64
-//  0,0,0,0,0,0,1,0  int 2
-//  0,0,0,0,0,0,0,1 63->56 int 1
-
-//6 0,1,0,0,0,0,0,0 [2 IS PERM ON] int 64
-//  0,0,0,0,0,0,0,1 56 int 1
-
-//7 0,1,0,0,0,0,0,0 [2 IS PERM ON] int 64
-//  0,0,0,1,0,0,0,1 56->52 int 17
-
-//8 0,0,0,1,0,0,0,0 52 int 16
-
-// END OF DEMO! 8 STEPS THROUGH
-
-// 0,0,0,1,0,0,0,0 int 16
-// 0,0,0,1,0,0,0,0 52->60 int 16
-
-// 0,0,0,1,0,0,0,0 60 int 16
-
-// 0,0,0,1,0,0,0,0 int 16
-// 0,0,1,0,0,0,0,0 60->11 int 32
-
-// 0,0,1,0,0,0,0,0 11 int 32
-
-// 0,0,1,1,0,0,0,0 11->12
-
-// 0,0,0,1,0,0,0,0 12
-
-
- // top rez F0I0 pin 42, HV507 2
- // top bridge B0I0 pin 43, HV507 1
- // 
- // movement pads 0 -> 3
- //
- // pad0 = PAD25 pin23, HV507 63
- // pad1 = PAD24 pin16, HV507 56 
- // pad2 = PAD23 pin12, HV507 52
- // pad3 = PAD7 pin20, HV507 60
- // 
- // side bridge B2I0 pin51, HV507 11
- // side rez F2I0 pin52, HV507 12
-  
-void setup (){
-
-  pinMode(LAT, OUTPUT);
-
-  pinMode(DATA, OUTPUT);
-
-  pinMode(DIR, OUTPUT);
-
-  pinMode (CLK, OUTPUT);
-
-  pinMode(BLANK, OUTPUT); 
-
-  pinMode(POL, OUTPUT);
-
-  pinMode(pause, INPUT);
-
-  pinMode(HOLDHIGH, OUTPUT);
-
-  digitalWrite(LAT, 0);
-
-  digitalWrite(DIR, 0);
-
-  digitalWrite(POL, 1);
-
-  digitalWrite(BLANK, 1);
-
-  digitalWrite(HOLDHIGH, 1);
-  
-  Serial.begin(9600);
-
-  while(digitalRead(pause));
-
+  digitalWrite(SHIFT_LATCH, LOW);
+  digitalWrite(SHIFT_LATCH, HIGH);
+  digitalWrite(SHIFT_LATCH, LOW);
 }
 
-void loop (){
-    
-    for(runNum=0; runNum<runCount; runNum++){
 
-    Serial.print("Run: ");
-    Serial.print(runNum);
-    Serial.println();
+/*
+   Read a byte from the EEPROM at the specified address.
+*/
+byte readEEPROM(int address) {
+  for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1) {
+    pinMode(pin, INPUT);
+  }
+  setAddress(address, /*outputEnable*/ true);
 
-    for(k=0;k<8;k++){
-    
-    Serial.print(outputArray[runNum][k]+256,BIN);
+  byte data = 0;
+  for (int pin = EEPROM_D7; pin >= EEPROM_D0; pin -= 1) {
+    data = (data << 1) + digitalRead(pin);
+  }
+  return data;
+}
 
-    Serial.println();
 
+/*
+   Write a byte to the EEPROM at the specified address.
+*/
+void writeEEPROM(int address, byte data) {
+  setAddress(address, /*outputEnable*/ false);
+  for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1) {
+    pinMode(pin, OUTPUT);
+  }
+
+  for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1) {
+    digitalWrite(pin, data & 1);
+    data = data >> 1;
+  }
+  digitalWrite(WRITE_EN, LOW);
+  delayMicroseconds(1);
+  digitalWrite(WRITE_EN, HIGH);
+  delay(10);
+}
+
+
+/*
+   Read the contents of the EEPROM and print them to the serial monitor.
+*/
+void printContents() {
+  for (int base = 0; base <= 255; base += 16) {
+    byte data[16];
+    for (int offset = 0; offset <= 15; offset += 1) {
+      data[offset] = readEEPROM(base + offset);
     }
 
-    Serial.println();
-  
-    delay(1000);
+    char buf[80];
+    sprintf(buf, "%03x:  %02x %02x %02x %02x %02x %02x %02x %02x   %02x %02x %02x %02x %02x %02x %02x %02x",
+            base, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+            data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]);
 
-    digitalWrite(LAT,1);
+    Serial.println(buf);
+  }
+}
 
-    for(i = 0; i<width; i++){
-      
-      shiftOut(DATA, CLK, MSBFIRST, outputArray[runNum][i]);
 
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(SHIFT_DATA, OUTPUT);
+  pinMode(SHIFT_CLK, OUTPUT);
+  pinMode(SHIFT_LATCH, OUTPUT);
+  digitalWrite(WRITE_EN, HIGH);
+  pinMode(WRITE_EN, OUTPUT);
+  Serial.begin(57600);
+
+
+  // Bit patterns for the digits 0..9
+  byte digits[] = { 0x7e, 0x30, 0x6d, 0x79, 0x33, 0x5b, 0x5f, 0x70, 0x7f, 0x7b };
+
+  Serial.println("Programming ones place");
+  for (int value = 0; value <= 255; value += 1) {
+    writeEEPROM(value, digits[value % 10]);
+  }
+  Serial.println("Programming tens place");
+  for (int value = 0; value <= 255; value += 1) {
+    writeEEPROM(value + 256, digits[(value / 10) % 10]);
+  }
+  Serial.println("Programming hundreds place");
+  for (int value = 0; value <= 255; value += 1) {
+    writeEEPROM(value + 512, digits[(value / 100) % 10]);
+  }
+  Serial.println("Programming sign");
+  for (int value = 0; value <= 255; value += 1) {
+    writeEEPROM(value + 768, 0);
+  }
+
+  Serial.println("Programming ones place (twos complement)");
+  for (int value = -128; value <= 127; value += 1) {
+    writeEEPROM((byte)value + 1024, digits[abs(value) % 10]);
+  }
+  Serial.println("Programming tens place (twos complement)");
+  for (int value = -128; value <= 127; value += 1) {
+    writeEEPROM((byte)value + 1280, digits[abs(value / 10) % 10]);
+  }
+  Serial.println("Programming hundreds place (twos complement)");
+  for (int value = -128; value <= 127; value += 1) {
+    writeEEPROM((byte)value + 1536, digits[abs(value / 100) % 10]);
+  }
+  Serial.println("Programming sign (twos complement)");
+  for (int value = -128; value <= 127; value += 1) {
+    if (value < 0) {
+      writeEEPROM((byte)value + 1792, 0x01);
+    } else {
+      writeEEPROM((byte)value + 1792, 0);
     }
+  }
 
-    digitalWrite(LAT,0);
-    
-    while(digitalRead(pause));
-    
-    }
-    
+  // Read and print out the contents of the EERPROM
+  Serial.println("Reading EEPROM");
+  printContents();
+}
+
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
 }
